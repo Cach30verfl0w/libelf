@@ -13,3 +13,4 @@ std = []
 
 [dependencies]
 compile_warning = "0.1.0"
+thiserror-no-std = "2.0.2"
