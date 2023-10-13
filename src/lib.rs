@@ -1,5 +1,9 @@
-#![feature(allocator_api)]
+#![feature(core_intrinsics)]
 #![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(test)]
+pub mod tests;
+pub mod header;
 
 use compile_warning::compile_warning;
 use thiserror_no_std::Error;
@@ -9,6 +13,9 @@ pub use std;
 
 #[cfg(not(feature = "std"))]
 pub use core as std;
+use std::mem::{size_of, transmute};
+use crate::header::FileHeader;
+use crate::header::ident::ElfIdent;
 
 // Inform a potential user that this library is not intended for use in production environments.
 // This is for the reason that this project is only a project so that I can get more familiar with
@@ -35,7 +42,7 @@ pub enum Error {
 }
 
 pub struct Elf {
-
+    header: FileHeader
 }
 
 impl Elf {
@@ -43,7 +50,7 @@ impl Elf {
     const MAGIC_BYTES: [u8; 4] = [0x7F, 0x45, 0x4C, 0x46];
 
     /// This field contains the minimal size of an ELF file
-    const MIN_ELF_SIZE: usize = 4;
+    const MIN_ELF_SIZE: usize = size_of::<ElfIdent>();
 
     /// This function accepts a byte slice and parses it into the content of the ELF file. But this
     /// conversion can fail, if the validation of the values in the header or other section data is
@@ -51,16 +58,28 @@ impl Elf {
     ///
     /// Here is a list with all errors, which can occur while this operation:
     /// - [Error::InvalidMagic] - The magic bytes of the file can't be found
+    /// - [Error::NotEnoughBytes] - The specified ELF data's size is not high enough to be a ELF file
     pub fn from_bytes(bytes: &[u8]) -> Result<Elf, Error> {
         // Get index of ELF header and validate size of the file with magic bytes index as start
         // point
-        let index = Self::elf_index(bytes).ok_or(Error::InvalidMagic)?;
+        let index = Self::elf_index(bytes).ok_or(Error::InvalidMagic)? + 4;
         if (bytes.len() - index) < Self::MIN_ELF_SIZE {
             return Err(Error::NotEnoughBytes(bytes.len() - index));
         }
 
-        // TODO: Load ELF
-        Ok(Elf {})
+        // Convert bytes in slice of header to ident bytes TODO: Use safe transmute when available
+        let ident: ElfIdent = unsafe {
+            let mut ident_data = [0; size_of::<ElfIdent>()];
+            ident_data.copy_from_slice(&bytes[index..(index + size_of::<ElfIdent>())]);
+            transmute(ident_data)
+        };
+
+        // Return parsed, validated and prepared ELF structure
+        Ok(Elf {
+            header: FileHeader {
+                ident
+            },
+        })
     }
 
     /// This function accepts the specified path, opens the file and reads the content into a byte
@@ -71,7 +90,7 @@ impl Elf {
     /// Here is a list with all errors, which can occur while this operation:
     /// - [Error::InvalidMagic] - The magic bytes of the file can't be found
     /// - [Error::IO] - Some std I/O operation fails (Only available with `std`-feature)
-    /// - [Error::NotEnoughBytes] - The specified ELF data's size is not high enough to be a ELF file
+    /// - [Error::NotEnoughBytes] - The specified ELF file's is not big enough to be a ELF file
     #[inline(always)]
     #[cfg(feature = "std")]
     pub fn from_path<P: AsRef<std::path::Path>>(path: P) -> Result<Elf, Error> {
@@ -96,11 +115,17 @@ impl Elf {
     /// the specified data.
     fn elf_index(bytes: &[u8]) -> Option<usize> {
         for i in 0..(bytes.len() - Self::MAGIC_BYTES.len()) {
-            if bytes[i..=(i + 4)] == Self::MAGIC_BYTES {
+            if bytes[i..=(i + 3)].eq(Self::MAGIC_BYTES.as_slice()) {
                 return Some(i);
             }
         }
         None
+    }
+
+    /// This function returns a reference to the file header.
+    #[inline]
+    fn file_header(&self) -> &FileHeader {
+        &self.header
     }
 
 }
