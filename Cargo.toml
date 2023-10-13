@@ -1,0 +1,15 @@
+[package]
+name = "libelf"
+description = "LibELF is a library for parsing and loading ELF files from memory or files as an project for learning purposes"
+version = "1.0.0-dev.1"
+categories = ["embedded-development", "no-standard-library"]
+keywords = ["elf", "parser", "loader"]
+authors = ["Cedric Hammes <cach30verfl0w@gmail.com>"]
+edition = "2021"
+
+[features]
+default = ["std"]
+std = []
+
+[dependencies]
+compile_warning = "0.1.0"
