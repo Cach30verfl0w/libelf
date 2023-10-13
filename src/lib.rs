@@ -9,7 +9,6 @@ pub use std;
 
 #[cfg(not(feature = "std"))]
 pub use core as std;
-use std::io::Read;
 
 // Inform a potential user that this library is not intended for use in production environments.
 // This is for the reason that this project is only a project so that I can get more familiar with
@@ -26,7 +25,7 @@ pub enum Error {
     InvalidMagic,
 
     /// The specified ELF data's size is not high enough to be a ELF file
-    #[error("The size {} is too low for an ELF file, please check your parameters")]
+    #[error("The size {0} is too low for an ELF file, please check your parameters")]
     NotEnoughBytes(usize),
 
     /// Some std I/O operation fails (Only available with `std`-feature)
@@ -65,8 +64,7 @@ impl Elf {
     }
 
     /// This function accepts the specified path, opens the file and reads the content into a byte
-    /// slice. The byte slice is given to the [Elf::from_bytes] function. This function directly
-    /// redirects to the [Elf::from_path_in] function.
+    /// slice. The byte slice is given to the [Elf::from_bytes] function.
     ///
     /// **This function uses heap allocations to read the file into a in-memory structure**
     ///
@@ -77,26 +75,11 @@ impl Elf {
     #[inline(always)]
     #[cfg(feature = "std")]
     pub fn from_path<P: AsRef<std::path::Path>>(path: P) -> Result<Elf, Error> {
-        Self::from_path_in(path, std::alloc::Global)
-    }
-
-    /// This function accepts the specified path, opens the file and reads the content into a byte
-    /// slice. The byte slice is given to the [Elf::from_bytes] function. The caller can also
-    /// define an allocator for the specified vector.
-    ///
-    /// **This function uses heap allocations to read the file into a in-memory structure**
-    ///
-    /// Here is a list with all errors, which can occur while this operation:
-    /// - [Error::InvalidMagic] - The magic bytes of the file can't be found
-    /// - [Error::IO] - Some std I/O operation fails (Only available with `std`-feature)
-    /// - [Error::NotEnoughBytes] - The specified ELF data's size is not high enough to be a ELF file
-    #[cfg(feature = "std")]
-    pub fn from_path_in<P: AsRef<std::path::Path>, A: std::alloc::Allocator>(path: P, allocator: A) -> Result<Elf, Error> {
-        use std::fs::File;
+        use std::{fs::File, io::Read};
 
         // Read file into bytes
         let mut file = File::open(path)?;
-        let mut bytes: Vec<u8, A> = Vec::new_in(allocator);
+        let mut bytes = Vec::new();
         let length = file.read_to_end(&mut bytes)?;
 
         // Validate file length
