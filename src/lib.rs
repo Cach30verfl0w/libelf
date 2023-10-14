@@ -3,6 +3,7 @@
 #[cfg(test)]
 pub mod tests;
 pub mod header;
+pub mod endian;
 
 use compile_warning::compile_warning;
 use thiserror_no_std::Error;
