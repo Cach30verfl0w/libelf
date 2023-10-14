@@ -13,7 +13,7 @@ pub use std;
 
 #[cfg(not(feature = "std"))]
 pub use core as std;
-use std::mem::size_of;
+use crate::std::mem::size_of;
 use crate::header::{FileHeader, ProgramHeader};
 use crate::header::ident::ElfIdent;
 

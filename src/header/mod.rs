@@ -1,4 +1,4 @@
-use std::mem;
+use crate::std::mem;
 use crate::Error;
 use crate::header::ident::{ElfClass, ElfIdent};
 
