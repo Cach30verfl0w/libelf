@@ -44,91 +44,155 @@ fn test_program_headers() {
 
     // Check first program header
     let program_header = program_headers.get(0).unwrap();
+    assert_eq!(program_header.offset, 0x40);
     assert_eq!(program_header.ty, SegmentType::Phdr);
     assert_eq!(program_header.virtual_address, 0x40);
     assert_eq!(program_header.physical_address, 0x40);
     assert_eq!(program_header.file_size, 0x310);
     assert_eq!(program_header.memory_size, 0x310);
     assert_eq!(program_header.flags, SegmentFlags::READABLE);
+    assert_eq!(program_header.alignment, 0x8);
 
     // Check second program header
     let program_header = program_headers.get(1).unwrap();
+    assert_eq!(program_header.offset, 0x350);
     assert_eq!(program_header.ty, SegmentType::Interp);
     assert_eq!(program_header.virtual_address, 0x350);
     assert_eq!(program_header.physical_address, 0x350);
     assert_eq!(program_header.file_size, 0x1C);
     assert_eq!(program_header.memory_size, 0x1C);
     assert_eq!(program_header.flags, SegmentFlags::READABLE);
+    assert_eq!(program_header.alignment, 0x1);
 
     // Check third program header
     let program_header = program_headers.get(2).unwrap();
+    assert_eq!(program_header.offset, 0x0000);
     assert_eq!(program_header.ty, SegmentType::Load);
     assert_eq!(program_header.virtual_address, 0x0);
     assert_eq!(program_header.physical_address, 0x0);
     assert_eq!(program_header.file_size, 0x55C8);
     assert_eq!(program_header.memory_size, 0x55C8);
     assert_eq!(program_header.flags, SegmentFlags::READABLE);
+    assert_eq!(program_header.alignment, 0x1000);
 
     // Check fourth program header
     let program_header = program_headers.get(3).unwrap();
+    assert_eq!(program_header.offset, 0x6000);
     assert_eq!(program_header.ty, SegmentType::Load);
     assert_eq!(program_header.virtual_address, 0x6000);
     assert_eq!(program_header.physical_address, 0x6000);
     assert_eq!(program_header.file_size, 0x42231);
     assert_eq!(program_header.memory_size, 0x42231);
     assert_eq!(program_header.flags, SegmentFlags::READABLE | SegmentFlags::EXECUTABLE);
+    assert_eq!(program_header.alignment, 0x1000);
 
     // Check fiftieth program header
     let program_header = program_headers.get(4).unwrap();
+    assert_eq!(program_header.offset, 0x49000);
     assert_eq!(program_header.ty, SegmentType::Load);
     assert_eq!(program_header.virtual_address, 0x49000);
     assert_eq!(program_header.physical_address, 0x49000);
     assert_eq!(program_header.file_size, 0xFCBC);
     assert_eq!(program_header.memory_size, 0xFCBC);
     assert_eq!(program_header.flags, SegmentFlags::READABLE);
+    assert_eq!(program_header.alignment, 0x1000);
 
     // Check sixth program header
     let program_header = program_headers.get(5).unwrap();
+    assert_eq!(program_header.offset, 0x590D8);
     assert_eq!(program_header.ty, SegmentType::Load);
     assert_eq!(program_header.virtual_address, 0x5A0D8);
     assert_eq!(program_header.physical_address, 0x5A0D8);
     assert_eq!(program_header.file_size, 0x2F58);
     assert_eq!(program_header.memory_size, 0x3068);
     assert_eq!(program_header.flags, SegmentFlags::READABLE | SegmentFlags::WRITABLE);
+    assert_eq!(program_header.alignment, 0x1000);
 
     // Check seventh program header
     let program_header = program_headers.get(6).unwrap();
+    assert_eq!(program_header.offset, 0x5B6C8);
     assert_eq!(program_header.ty, SegmentType::Dynamic);
     assert_eq!(program_header.virtual_address, 0x5C6C8);
     assert_eq!(program_header.physical_address, 0x5C6C8);
     assert_eq!(program_header.file_size, 0x210);
     assert_eq!(program_header.memory_size, 0x210);
     assert_eq!(program_header.flags, SegmentFlags::READABLE | SegmentFlags::WRITABLE);
+    assert_eq!(program_header.alignment, 0x8);
 
     // Check eighth program header
     let program_header = program_headers.get(7).unwrap();
+    assert_eq!(program_header.offset, 0x370);
     assert_eq!(program_header.ty, SegmentType::Note);
     assert_eq!(program_header.virtual_address, 0x370);
     assert_eq!(program_header.physical_address, 0x370);
     assert_eq!(program_header.file_size, 0x20);
     assert_eq!(program_header.memory_size, 0x20);
     assert_eq!(program_header.flags, SegmentFlags::READABLE);
+    assert_eq!(program_header.alignment, 0x8);
 
     // Check ninth program header
     let program_header = program_headers.get(8).unwrap();
+    assert_eq!(program_header.offset, 0x390);
     assert_eq!(program_header.ty, SegmentType::Note);
     assert_eq!(program_header.virtual_address, 0x390);
     assert_eq!(program_header.physical_address, 0x390);
     assert_eq!(program_header.file_size, 0x44);
     assert_eq!(program_header.memory_size, 0x44);
     assert_eq!(program_header.flags, SegmentFlags::READABLE);
+    assert_eq!(program_header.alignment, 0x4);
 
     // Check tenth program header
     let program_header = program_headers.get(9).unwrap();
+    assert_eq!(program_header.offset, 0x590D8);
     assert_eq!(program_header.ty, SegmentType::TLS);
     assert_eq!(program_header.virtual_address, 0x5A0D8);
     assert_eq!(program_header.physical_address, 0x5A0D8);
     assert_eq!(program_header.file_size, 0x28);
     assert_eq!(program_header.memory_size, 0x50);
     assert_eq!(program_header.flags, SegmentFlags::READABLE);
+    assert_eq!(program_header.alignment, 0x8);
+
+    // Check eleventh program header
+    let program_header = program_headers.get(10).unwrap();
+    assert_eq!(program_header.offset, 0x370);
+    assert_eq!(program_header.ty, SegmentType::GNUProperty);
+    assert_eq!(program_header.virtual_address, 0x370);
+    assert_eq!(program_header.physical_address, 0x370);
+    assert_eq!(program_header.file_size, 0x20);
+    assert_eq!(program_header.memory_size, 0x20);
+    assert_eq!(program_header.flags, SegmentFlags::READABLE);
+    assert_eq!(program_header.alignment, 0x8);
+
+    // Check twelfth program header
+    let program_header = program_headers.get(11).unwrap();
+    assert_eq!(program_header.offset, 0x4F870);
+    assert_eq!(program_header.ty, SegmentType::GNUEhFrame);
+    assert_eq!(program_header.virtual_address, 0x4F870);
+    assert_eq!(program_header.physical_address, 0x4F870);
+    assert_eq!(program_header.file_size, 0x12B4);
+    assert_eq!(program_header.memory_size, 0x12B4);
+    assert_eq!(program_header.flags, SegmentFlags::READABLE);
+    assert_eq!(program_header.alignment, 0x4);
+
+    // Check thirteenth program header
+    let program_header = program_headers.get(12).unwrap();
+    assert_eq!(program_header.offset, 0x0);
+    assert_eq!(program_header.ty, SegmentType::GNUStack);
+    assert_eq!(program_header.virtual_address, 0x0);
+    assert_eq!(program_header.physical_address, 0x0);
+    assert_eq!(program_header.file_size, 0x0);
+    assert_eq!(program_header.memory_size, 0x0);
+    assert_eq!(program_header.flags, SegmentFlags::READABLE | SegmentFlags::WRITABLE);
+    assert_eq!(program_header.alignment, 0x10);
+
+    // Check fourteenth program header
+    let program_header = program_headers.get(13).unwrap();
+    assert_eq!(program_header.offset, 0x590D8);
+    assert_eq!(program_header.ty, SegmentType::GNURelro);
+    assert_eq!(program_header.virtual_address, 0x5A0D8);
+    assert_eq!(program_header.physical_address, 0x5A0D8);
+    assert_eq!(program_header.file_size, 0x2F28);
+    assert_eq!(program_header.memory_size, 0x2F28);
+    assert_eq!(program_header.flags, SegmentFlags::READABLE);
+    assert_eq!(program_header.alignment, 0x1);
 }

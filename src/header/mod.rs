@@ -227,7 +227,7 @@ pub enum SegmentType {
     /// ## See also
     /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
     #[default]
-    Null = 0,
+    Null = 0x0,
 
     /// This type defines a loadable segment. So you should map the bytes in the header into the
     /// memory on the address. If the memory size is larger than the file size, the extra bytes must
@@ -235,13 +235,13 @@ pub enum SegmentType {
     ///
     /// ## See also
     /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
-    Load = 1,
+    Load = 0x1,
 
     /// This type defines a section that contains dynamic linking information.
     ///
     /// ## See also
     /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
-    Dynamic = 2,
+    Dynamic = 0x2,
 
     /// This type defines the location and size of a null-terminated path name. This segment is only
     /// meaningful for executable files and shared objects. It should be only one section with that
@@ -249,46 +249,55 @@ pub enum SegmentType {
     ///
     /// ## See also
     /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
-    Interp = 3,
+    Interp = 0x3,
 
     /// The array element specifies the location and size of auxiliary information.
     ///
     /// ## See also
     /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
-    Note = 4,
+    Note = 0x4,
 
     /// This type is reserved but has unspecified semantics. Programs that contain an array element
     /// of this type do not conform to the ABI.
     ///
     /// ## See also
     /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
-    ShLib = 5,
+    ShLib = 0x5,
 
     /// This type defines a section that specifies the location and size of the program header table
     /// itself.
     ///
     /// ## See also
     /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
-    Phdr = 6,
+    Phdr = 0x6,
 
     /// This type defines the Thread-Local Storage Template. Implementations doesn't need to support
     /// this program table section.
     ///
     /// ## See also
     /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
-    TLS = 7,
+    TLS = 0x7,
+
+    GNUProperty = 0x6474E553,
+    GNUEhFrame = 0x6474E550,
+    GNUStack = 0x6474E551,
+    GNURelro = 0x6474E552
 }
 
 impl From<u32> for SegmentType {
     fn from(value: u32) -> Self {
         match value {
-            1 => Self::Load,
-            2 => Self::Dynamic,
-            3 => Self::Interp,
-            4 => Self::Note,
-            5 => Self::ShLib,
-            6 => Self::Phdr,
-            7 => Self::TLS,
+            0x00000001 => Self::Load,
+            0x00000002 => Self::Dynamic,
+            0x00000003 => Self::Interp,
+            0x00000004 => Self::Note,
+            0x00000005 => Self::ShLib,
+            0x00000006 => Self::Phdr,
+            0x00000007 => Self::TLS,
+            0x6474E553 => Self::GNUProperty,
+            0x6474E550 => Self::GNUEhFrame,
+            0x6474E551 => Self::GNUStack,
+            0x6474E552 => Self::GNURelro,
             _ => Self::Null
         }
     }
