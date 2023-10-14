@@ -18,7 +18,7 @@ fn test_elf_header() {
     let header = elf.file_header();
     assert_eq!(header.ty, FileType::SharedObject);
     assert_eq!(header.machine, TargetMachine::X86_64);
-    assert_eq!(header.entry_address, 0x87A0);
+    assert_eq!(header.entry_address, Some(0x87A0));
     assert_eq!(header.version, 0x1);
     assert_eq!(header.program_header_offset, 64);
     assert_eq!(header.section_header_offset, 4586344);

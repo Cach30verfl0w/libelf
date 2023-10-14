@@ -2,9 +2,9 @@
 /// the class is invalid, `CLASS32` if this file is a 32-bit object or `CLASS64` if this file is a
 /// 64-bit object.
 ///
-/// - [ElfClass::Invalid] - Invalid class specified
-/// - [ElfClass::Class32] - 32-bit ELF File
-/// - [ElfClass::Class64] - 64-bit ELF file
+/// - [ElfClass::Invalid]: Invalid class specified
+/// - [ElfClass::Class32]: 32-bit ELF File
+/// - [ElfClass::Class64]: 64-bit ELF file
 #[repr(u8)]
 #[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug, Hash, Default)]
 pub enum ElfClass {
@@ -18,9 +18,9 @@ pub enum ElfClass {
 /// the endianness is invalid, [`ElfEndian::Little`] when this file is little-endian encoded
 /// or [`ElfEndian::Big`] when this file is big-endian encoded.
 ///
-/// - [ElfEndian::Invalid] - Invalid endian specified
-/// - [ElfEndian::Little] - Little endian
-/// - [ElfEndian::Big] - Big endian
+/// - [ElfEndian::Invalid]: Invalid endian specified
+/// - [ElfEndian::Little]: Little endian
+/// - [ElfEndian::Big]: Big endian
 #[repr(u8)]
 #[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug, Hash, Default)]
 pub enum ElfEndian {
@@ -33,8 +33,8 @@ pub enum ElfEndian {
 /// This enum represents the version of the ELF file. This can currently be the current version (1)
 /// or an invalid version.
 ///
-/// - [ElfVersion::Invalid] - Invalid ELF version specified
-/// - [ElfVersion::Current] - Current ELF version
+/// - [ElfVersion::Invalid]: Invalid ELF version specified
+/// - [ElfVersion::Current]: Current ELF version
 #[repr(u8)]
 #[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug, Hash, Default)]
 pub enum ElfVersion {

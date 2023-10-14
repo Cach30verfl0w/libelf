@@ -39,6 +39,17 @@ impl From<u16> for FileType {
     }
 }
 
+/// This enum represents the target architecture/machine of the ELF file. This can be none for an
+/// unknown or invalid target or one of the valid entries like x86_64 or ARM.
+///
+/// - [TargetMachine::None]: Unknown or invalid target architecture
+/// - [TargetMachine::X86_64]: x86_64 as target architecture
+/// - [TargetMachine::ARM]: ARM/AArch32 as target architecture
+/// - [TargetMachine::ARM64]: ARM64/AArch64 as target architecture
+/// - [TargetMachine::RISCV]: RISC-V as target architecture
+///
+/// ## See also
+/// - [ELF Header](https://www.sco.com/developers/gabi/latest/ch4.eheader.html) by SCO, Inc.
 #[repr(u16)]
 #[rustfmt::skip]
 #[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug, Hash, Default)]
