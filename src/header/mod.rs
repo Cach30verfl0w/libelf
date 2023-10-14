@@ -212,17 +212,69 @@ impl FileHeader {
     }
 }
 
+/// This enum contains all allowed types for segments in ELF files. These types are parsed by the
+/// [ProgramHeader::read] function.
+///
+/// ## See also
+/// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
 #[repr(u32)]
 #[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug, Hash, Default)]
 pub enum SegmentType {
+    /// This type is unused. Other member values are undefined so we ignore that type in loading
+    /// etc.
+    ///
+    /// ## See also
+    /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
     #[default]
     Null = 0,
+
+    /// This type defines a loadable segment. So you should map the bytes in the header into the
+    /// memory on the address. If the memory size is larger than the file size, the extra bytes must
+    /// be filled with 0's.
+    ///
+    /// ## See also
+    /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
     Load = 1,
+
+    /// This type defines a section that contains dynamic linking information.
+    ///
+    /// ## See also
+    /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
     Dynamic = 2,
+
+    /// This type defines the location and size of a null-terminated path name. This segment is only
+    /// meaningful for executable files and shared objects. It should be only one section with that
+    /// type in an ELF file.
+    ///
+    /// ## See also
+    /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
     Interp = 3,
+
+    /// The array element specifies the location and size of auxiliary information.
+    ///
+    /// ## See also
+    /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
     Note = 4,
+
+    /// This type is reserved but has unspecified semantics. Programs that contain an array element
+    /// of this type do not conform to the ABI.
+    ///
+    /// ## See also
+    /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
     ShLib = 5,
+
+    /// This type defines a section that specifies the location and size of the program header table
+    /// itself.
+    ///
+    /// ## See also
+    /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
     Phdr = 6,
+
+    /// This type defines the Thread-Local Storage Template. Implementations doesn't need to support
+    /// this program table section.
+    ///
+    /// ## See also
+    /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
     TLS = 7,
 }
 
