@@ -1,5 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+extern crate alloc;
+
 #[cfg(test)]
 pub mod tests;
 pub mod header;
@@ -10,6 +12,9 @@ use thiserror_no_std::Error;
 
 #[cfg(feature = "std")]
 pub use std;
+
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
 #[cfg(not(feature = "std"))]
 pub use core as std;

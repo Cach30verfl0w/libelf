@@ -15,7 +15,7 @@ macro_rules! impl_endian_reader {
     ($ty: ty) => {
         impl EndianReader for $ty {
             fn read_with_endian(slice: &[u8], endian: ElfEndian, offset: Option<&mut usize>) -> Option<Self> {
-                const SELF_SIZE: usize = std::mem::size_of::<$ty>();
+                const SELF_SIZE: usize = crate::std::mem::size_of::<$ty>();
 
                 let offset_usize = offset.as_ref().map(|value| **value).unwrap_or(0);
                 let slice = slice.get(offset_usize..(offset_usize + SELF_SIZE)).unwrap();
