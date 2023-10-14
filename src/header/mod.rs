@@ -4,6 +4,16 @@ use crate::header::ident::{ElfClass, ElfIdent};
 
 pub mod ident;
 
+macro_rules! read_class_dependent {
+    ($ident_field: expr, $slice_field: ident, $offset: expr) => {
+        match $ident_field.class {
+            ElfClass::Invalid => return Err(Error::InvalidClass),
+            ElfClass::Class32 => $ident_field.endian.read::<u32>($slice_field, Some($offset)).unwrap() as u64,
+            ElfClass::Class64 => $ident_field.endian.read::<u64>($slice_field, Some($offset)).unwrap()
+        }
+    }
+}
+
 /// This enum represents the type of the ELF file. The file can be a relocatable file, an executable
 /// file, an shared object or an core file.
 ///
@@ -138,16 +148,6 @@ pub struct FileHeader {
     pub string_table_index: u16
 }
 
-macro_rules! read_address_or_offset {
-    ($ident_field: expr, $slice_field: ident, $offset: expr) => {
-        match $ident_field.class {
-            ElfClass::Invalid => return Err(Error::InvalidClass),
-            ElfClass::Class32 => $ident_field.endian.read::<u32>($slice_field, Some($offset)).unwrap() as u64,
-            ElfClass::Class64 => $ident_field.endian.read::<u64>($slice_field, Some($offset)).unwrap()
-        }
-    }
-}
-
 impl FileHeader {
 
     /// This function parses the specified slice with the offset to a ELF header. Most parts of the
@@ -173,9 +173,9 @@ impl FileHeader {
         let version = ident.endian.read::<u32>(slice, Some(&mut offset)).unwrap();
 
         // Read entrypoint address and some offsets. We also read he size of this header.
-        let entry_address = read_address_or_offset!(ident, slice, &mut offset);
-        let program_header_offset = read_address_or_offset!(ident, slice, &mut offset);
-        let section_header_offset = read_address_or_offset!(ident, slice, &mut offset);
+        let entry_address = read_class_dependent!(ident, slice, &mut offset);
+        let program_header_offset = read_class_dependent!(ident, slice, &mut offset);
+        let section_header_offset = read_class_dependent!(ident, slice, &mut offset);
 
         // Read size of this header and flags
         let flags = ident.endian.read::<u32>(slice, Some(&mut offset)).unwrap();
@@ -371,11 +371,11 @@ impl ProgramHeader {
         }
 
         // Read values in center of header
-        program_header.offset = read_address_or_offset!(ident, slice, &mut offset);
-        program_header.virtual_address = read_address_or_offset!(ident, slice, &mut offset);
-        program_header.physical_address = read_address_or_offset!(ident, slice, &mut offset);
-        program_header.file_size = read_address_or_offset!(ident, slice, &mut offset);
-        program_header.memory_size = read_address_or_offset!(ident, slice, &mut offset);
+        program_header.offset = read_class_dependent!(ident, slice, &mut offset);
+        program_header.virtual_address = read_class_dependent!(ident, slice, &mut offset);
+        program_header.physical_address = read_class_dependent!(ident, slice, &mut offset);
+        program_header.file_size = read_class_dependent!(ident, slice, &mut offset);
+        program_header.memory_size = read_class_dependent!(ident, slice, &mut offset);
 
         // Read elf flags if 32-bit ELF
         if ident.class == ElfClass::Class32 {
@@ -383,7 +383,7 @@ impl ProgramHeader {
         }
 
         // Read alignment and return program header
-        program_header.alignment = read_address_or_offset!(ident, slice, &mut offset);
+        program_header.alignment = read_class_dependent!(ident, slice, &mut offset);
         Ok(program_header)
     }
 }
