@@ -139,7 +139,7 @@ pub struct FileHeader {
 }
 
 macro_rules! read_address_or_offset {
-    ($ident_field: ident, $slice_field: ident, $offset: expr) => {
+    ($ident_field: expr, $slice_field: ident, $offset: expr) => {
         match $ident_field.class {
             ElfClass::Invalid => return Err(Error::InvalidClass),
             ElfClass::Class32 => $ident_field.endian.read::<u32>($slice_field, Some($offset)).unwrap() as u64,
@@ -209,5 +209,75 @@ impl FileHeader {
             section_header_count,
             string_table_index,
         })
+    }
+}
+
+#[repr(u32)]
+#[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug, Hash, Default)]
+pub enum SegmentType {
+    #[default]
+    Null = 0,
+    Load = 1,
+    Dynamic = 2,
+    Interp = 3,
+    Note = 4,
+    ShLib = 5,
+    Phdr = 6,
+    TLS = 7,
+}
+
+impl From<u32> for SegmentType {
+    fn from(value: u32) -> Self {
+        match value {
+            1 => Self::Load,
+            2 => Self::Dynamic,
+            3 => Self::Interp,
+            4 => Self::Note,
+            5 => Self::ShLib,
+            6 => Self::Phdr,
+            7 => Self::TLS,
+            _ => Self::Null
+        }
+    }
+}
+
+#[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug, Hash, Default)]
+pub struct ProgramHeader {
+    pub ty: SegmentType,
+    pub flags: u32,
+    pub offset: u64,
+    pub virtual_address: u64,
+    pub physical_address: u64,
+    pub file_size: u64,
+    pub memory_size: u64,
+    pub alignment: u64
+}
+
+impl ProgramHeader {
+    pub fn read(ident: &ElfIdent, slice: &[u8], mut offset: usize) -> Result<ProgramHeader, Error> {
+        let endian = &ident.endian;
+        let mut program_header = ProgramHeader::default();
+        program_header.ty = SegmentType::from(ident.endian.read::<u32>(slice, Some(&mut offset)).unwrap());
+
+        // Read elf flags if 64-bit ELF
+        if ident.class == ElfClass::Class64 {
+            program_header.flags = endian.read(slice, Some(&mut offset)).unwrap();
+        }
+
+        // Read values in center of header
+        program_header.offset = read_address_or_offset!(ident, slice, &mut offset);
+        program_header.virtual_address = read_address_or_offset!(ident, slice, &mut offset);
+        program_header.physical_address = read_address_or_offset!(ident, slice, &mut offset);
+        program_header.file_size = read_address_or_offset!(ident, slice, &mut offset);
+        program_header.memory_size = read_address_or_offset!(ident, slice, &mut offset);
+
+        // Read elf flags if 32-bit ELF
+        if ident.class == ElfClass::Class32 {
+            program_header.flags = endian.read(slice, Some(&mut offset)).unwrap();
+        }
+
+        // Read alignment and return program header
+        program_header.alignment = read_address_or_offset!(ident, slice, &mut offset);
+        Ok(program_header)
     }
 }

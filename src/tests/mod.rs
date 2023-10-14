@@ -1,9 +1,9 @@
 use crate::Elf;
-use crate::header::{FileType, TargetMachine};
+use crate::header::{FileType, SegmentType, TargetMachine};
 use crate::header::ident::{ElfClass, ElfEndian, ElfOsABI, ElfVersion};
 
 #[test]
-fn test_elf_header() {
+fn test_file_header() {
     let elf = Elf::from_bytes(include_bytes!("hello-world")).unwrap();
 
     // Test Ident Bytes
@@ -35,4 +35,90 @@ fn test_elf_header() {
 
     // Index of string table
     assert_eq!(header.string_table_index, 41);
+}
+
+#[test]
+fn test_program_headers() {
+    let elf = Elf::from_bytes(include_bytes!("hello-world")).unwrap();
+    let program_headers = elf.program_headers.as_ref().unwrap();
+
+    // Check first program header
+    let program_header = program_headers.get(0).unwrap();
+    assert_eq!(program_header.ty, SegmentType::Phdr);
+    assert_eq!(program_header.virtual_address, 0x40);
+    assert_eq!(program_header.physical_address, 0x40);
+    assert_eq!(program_header.file_size, 0x310);
+    assert_eq!(program_header.memory_size, 0x310);
+
+    // Check second program header
+    let program_header = program_headers.get(1).unwrap();
+    assert_eq!(program_header.ty, SegmentType::Interp);
+    assert_eq!(program_header.virtual_address, 0x350);
+    assert_eq!(program_header.physical_address, 0x350);
+    assert_eq!(program_header.file_size, 0x1C);
+    assert_eq!(program_header.memory_size, 0x1C);
+
+    // Check third program header
+    let program_header = program_headers.get(2).unwrap();
+    assert_eq!(program_header.ty, SegmentType::Load);
+    assert_eq!(program_header.virtual_address, 0x0);
+    assert_eq!(program_header.physical_address, 0x0);
+    assert_eq!(program_header.file_size, 0x55C8);
+    assert_eq!(program_header.memory_size, 0x55C8);
+
+    // Check fourth program header
+    let program_header = program_headers.get(3).unwrap();
+    assert_eq!(program_header.ty, SegmentType::Load);
+    assert_eq!(program_header.virtual_address, 0x6000);
+    assert_eq!(program_header.physical_address, 0x6000);
+    assert_eq!(program_header.file_size, 0x42231);
+    assert_eq!(program_header.memory_size, 0x42231);
+
+    // Check fiftieth program header
+    let program_header = program_headers.get(4).unwrap();
+    assert_eq!(program_header.ty, SegmentType::Load);
+    assert_eq!(program_header.virtual_address, 0x49000);
+    assert_eq!(program_header.physical_address, 0x49000);
+    assert_eq!(program_header.file_size, 0xFCBC);
+    assert_eq!(program_header.memory_size, 0xFCBC);
+
+    // Check sixth program header
+    let program_header = program_headers.get(5).unwrap();
+    assert_eq!(program_header.ty, SegmentType::Load);
+    assert_eq!(program_header.virtual_address, 0x5A0D8);
+    assert_eq!(program_header.physical_address, 0x5A0D8);
+    assert_eq!(program_header.file_size, 0x2F58);
+    assert_eq!(program_header.memory_size, 0x3068);
+
+    // Check seventh program header
+    let program_header = program_headers.get(6).unwrap();
+    assert_eq!(program_header.ty, SegmentType::Dynamic);
+    assert_eq!(program_header.virtual_address, 0x5C6C8);
+    assert_eq!(program_header.physical_address, 0x5C6C8);
+    assert_eq!(program_header.file_size, 0x210);
+    assert_eq!(program_header.memory_size, 0x210);
+
+    // Check eighth program header
+    let program_header = program_headers.get(7).unwrap();
+    assert_eq!(program_header.ty, SegmentType::Note);
+    assert_eq!(program_header.virtual_address, 0x370);
+    assert_eq!(program_header.physical_address, 0x370);
+    assert_eq!(program_header.file_size, 0x20);
+    assert_eq!(program_header.memory_size, 0x20);
+
+    // Check ninth program header
+    let program_header = program_headers.get(8).unwrap();
+    assert_eq!(program_header.ty, SegmentType::Note);
+    assert_eq!(program_header.virtual_address, 0x390);
+    assert_eq!(program_header.physical_address, 0x390);
+    assert_eq!(program_header.file_size, 0x44);
+    assert_eq!(program_header.memory_size, 0x44);
+
+    // Check tenth program header
+    let program_header = program_headers.get(9).unwrap();
+    assert_eq!(program_header.ty, SegmentType::TLS);
+    assert_eq!(program_header.virtual_address, 0x5A0D8);
+    assert_eq!(program_header.physical_address, 0x5A0D8);
+    assert_eq!(program_header.file_size, 0x28);
+    assert_eq!(program_header.memory_size, 0x50);
 }

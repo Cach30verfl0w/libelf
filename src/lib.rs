@@ -14,7 +14,7 @@ pub use std;
 #[cfg(not(feature = "std"))]
 pub use core as std;
 use std::mem::size_of;
-use crate::header::FileHeader;
+use crate::header::{FileHeader, ProgramHeader};
 use crate::header::ident::ElfIdent;
 
 // Inform a potential user that this library is not intended for use in production environments.
@@ -46,7 +46,8 @@ pub enum Error {
 }
 
 pub struct Elf {
-    header: FileHeader
+    header: FileHeader,
+    program_headers: Option<Vec<ProgramHeader>>
 }
 
 impl Elf {
@@ -72,9 +73,26 @@ impl Elf {
             return Err(Error::NotEnoughBytes(bytes.len() - index));
         }
 
+        // Read ELF header
+        let header = FileHeader::read(bytes, index.clone())?;
+
+        // Read all program headers
+        let program_headers = if header.program_header_count > 0 {
+            let mut program_headers = Vec::new();
+            for i in 0..header.program_header_size {
+                program_headers.push(ProgramHeader::read(
+                    &header.ident,
+                    bytes,
+                    index - 4 + header.program_header_offset as usize + (i * header.program_header_size) as usize
+                )?);
+            }
+            Some(program_headers)
+        } else { None };
+
         // Return parsed, validated and prepared ELF structure
         Ok(Elf {
-            header: FileHeader::read(bytes, index)?,
+            header,
+            program_headers
         })
     }
 
