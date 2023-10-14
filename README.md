@@ -9,7 +9,7 @@ LibELF is a library for parsing and loading ELF files from memory or files as an
 </div>
 
 ## Safety
-I aim to use as few unsafe blocks as possible, but I had to use a few ([Elf::from_bytes](https://github.com/Cach30verfl0w/libelf/blob/main/src/lib.rs#L70-L74)). This library is as safe as possible for me. I can remove a lot unsafe blocks when Rust contains [safe transmutes](https://rust-lang.github.io/rfcs/2835-project-safe-transmute.html).
+I aim to use as few unsafe blocks as possible, but I had to use a few. This library is as safe as possible for me. I can remove a lot unsafe blocks when Rust contains [safe transmutes](https://rust-lang.github.io/rfcs/2835-project-safe-transmute.html).
 
 ## Related projects
 I found some projects that are related to this. A few of them are written in a different language, but you can check out them too. Here is a list with them. Many of them are also better and more production-ready than this crate.
