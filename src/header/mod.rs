@@ -1,3 +1,4 @@
+use bitflags::bitflags;
 use crate::std::mem;
 use crate::Error;
 use crate::header::ident::{ElfClass, ElfIdent};
@@ -293,6 +294,22 @@ impl From<u32> for SegmentType {
     }
 }
 
+bitflags! {
+    /// This structure represents the flags of a segment header/section. A section header can define
+    /// three bits for the access.
+    #[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug, Hash, Default)]
+    pub struct SegmentFlags: u32 {
+        /// The content of the section is executable
+        const EXECUTABLE = 0x1;
+
+        /// The content of the section is writable
+        const WRITABLE   = 0x2;
+
+        /// The content of the section is readable
+        const READABLE   = 0x4;
+    }
+}
+
 /// This structure contains the program segment header in a ELF file. The header contains the type,
 /// the flags, offset, virtual and physical address, file and memory size and alignment of the
 /// program section.
@@ -311,7 +328,7 @@ pub struct ProgramHeader {
     ///
     /// ## See also
     /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
-    pub flags: u32,
+    pub flags: SegmentFlags,
 
     /// This field indicates the offset of the segment in the ELF data.
     ///
@@ -367,7 +384,9 @@ impl ProgramHeader {
 
         // Read elf flags if 64-bit ELF
         if ident.class == ElfClass::Class64 {
-            program_header.flags = endian.read(slice, Some(&mut offset)).unwrap();
+            program_header.flags = SegmentFlags::from_bits_retain(
+                endian.read(slice, Some(&mut offset)).unwrap()
+            );
         }
 
         // Read values in center of header
@@ -379,7 +398,9 @@ impl ProgramHeader {
 
         // Read elf flags if 32-bit ELF
         if ident.class == ElfClass::Class32 {
-            program_header.flags = endian.read(slice, Some(&mut offset)).unwrap();
+            program_header.flags = SegmentFlags::from_bits_retain(
+                endian.read(slice, Some(&mut offset)).unwrap()
+            );
         }
 
         // Read alignment and return program header

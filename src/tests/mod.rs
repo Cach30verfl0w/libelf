@@ -1,5 +1,5 @@
 use crate::Elf;
-use crate::header::{FileType, SegmentType, TargetMachine};
+use crate::header::{FileType, SegmentFlags, SegmentType, TargetMachine};
 use crate::header::ident::{ElfClass, ElfEndian, ElfOsABI, ElfVersion};
 
 #[test]
@@ -49,6 +49,7 @@ fn test_program_headers() {
     assert_eq!(program_header.physical_address, 0x40);
     assert_eq!(program_header.file_size, 0x310);
     assert_eq!(program_header.memory_size, 0x310);
+    assert_eq!(program_header.flags, SegmentFlags::READABLE);
 
     // Check second program header
     let program_header = program_headers.get(1).unwrap();
@@ -57,6 +58,7 @@ fn test_program_headers() {
     assert_eq!(program_header.physical_address, 0x350);
     assert_eq!(program_header.file_size, 0x1C);
     assert_eq!(program_header.memory_size, 0x1C);
+    assert_eq!(program_header.flags, SegmentFlags::READABLE);
 
     // Check third program header
     let program_header = program_headers.get(2).unwrap();
@@ -65,6 +67,7 @@ fn test_program_headers() {
     assert_eq!(program_header.physical_address, 0x0);
     assert_eq!(program_header.file_size, 0x55C8);
     assert_eq!(program_header.memory_size, 0x55C8);
+    assert_eq!(program_header.flags, SegmentFlags::READABLE);
 
     // Check fourth program header
     let program_header = program_headers.get(3).unwrap();
@@ -73,6 +76,7 @@ fn test_program_headers() {
     assert_eq!(program_header.physical_address, 0x6000);
     assert_eq!(program_header.file_size, 0x42231);
     assert_eq!(program_header.memory_size, 0x42231);
+    assert_eq!(program_header.flags, SegmentFlags::READABLE | SegmentFlags::EXECUTABLE);
 
     // Check fiftieth program header
     let program_header = program_headers.get(4).unwrap();
@@ -81,6 +85,7 @@ fn test_program_headers() {
     assert_eq!(program_header.physical_address, 0x49000);
     assert_eq!(program_header.file_size, 0xFCBC);
     assert_eq!(program_header.memory_size, 0xFCBC);
+    assert_eq!(program_header.flags, SegmentFlags::READABLE);
 
     // Check sixth program header
     let program_header = program_headers.get(5).unwrap();
@@ -89,6 +94,7 @@ fn test_program_headers() {
     assert_eq!(program_header.physical_address, 0x5A0D8);
     assert_eq!(program_header.file_size, 0x2F58);
     assert_eq!(program_header.memory_size, 0x3068);
+    assert_eq!(program_header.flags, SegmentFlags::READABLE | SegmentFlags::WRITABLE);
 
     // Check seventh program header
     let program_header = program_headers.get(6).unwrap();
@@ -97,6 +103,7 @@ fn test_program_headers() {
     assert_eq!(program_header.physical_address, 0x5C6C8);
     assert_eq!(program_header.file_size, 0x210);
     assert_eq!(program_header.memory_size, 0x210);
+    assert_eq!(program_header.flags, SegmentFlags::READABLE | SegmentFlags::WRITABLE);
 
     // Check eighth program header
     let program_header = program_headers.get(7).unwrap();
@@ -105,6 +112,7 @@ fn test_program_headers() {
     assert_eq!(program_header.physical_address, 0x370);
     assert_eq!(program_header.file_size, 0x20);
     assert_eq!(program_header.memory_size, 0x20);
+    assert_eq!(program_header.flags, SegmentFlags::READABLE);
 
     // Check ninth program header
     let program_header = program_headers.get(8).unwrap();
@@ -113,6 +121,7 @@ fn test_program_headers() {
     assert_eq!(program_header.physical_address, 0x390);
     assert_eq!(program_header.file_size, 0x44);
     assert_eq!(program_header.memory_size, 0x44);
+    assert_eq!(program_header.flags, SegmentFlags::READABLE);
 
     // Check tenth program header
     let program_header = program_headers.get(9).unwrap();
@@ -121,4 +130,5 @@ fn test_program_headers() {
     assert_eq!(program_header.physical_address, 0x5A0D8);
     assert_eq!(program_header.file_size, 0x28);
     assert_eq!(program_header.memory_size, 0x50);
+    assert_eq!(program_header.flags, SegmentFlags::READABLE);
 }
