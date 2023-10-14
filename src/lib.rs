@@ -1,3 +1,4 @@
+#![feature(inherent_associated_types)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(test)]
@@ -13,7 +14,7 @@ pub use std;
 
 #[cfg(not(feature = "std"))]
 pub use core as std;
-use std::mem::{size_of, transmute};
+use std::mem::size_of;
 use crate::header::FileHeader;
 use crate::header::ident::ElfIdent;
 
@@ -67,18 +68,9 @@ impl Elf {
             return Err(Error::NotEnoughBytes(bytes.len() - index));
         }
 
-        // Convert bytes in slice of header to ident bytes TODO: Use safe transmute when available
-        let ident: ElfIdent = unsafe {
-            let mut ident_data = [0; size_of::<ElfIdent>()];
-            ident_data.copy_from_slice(&bytes[index..(index + size_of::<ElfIdent>())]);
-            transmute(ident_data)
-        };
-
         // Return parsed, validated and prepared ELF structure
         Ok(Elf {
-            header: FileHeader {
-                ident
-            },
+            header: FileHeader::read(bytes, index),
         })
     }
 
