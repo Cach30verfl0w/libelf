@@ -1,5 +1,5 @@
 use std::mem;
-use crate::header::ident::ElfIdent;
+use crate::header::ident::{ElfClass, ElfIdent};
 
 pub mod ident;
 
@@ -75,32 +75,86 @@ impl From<u16> for TargetMachine {
 pub struct FileHeader {
     /// This struct represents the indication bytes of the ELF file without the ELF magic bytes. For
     /// more information, see [ElfIdent].
-    pub(crate) ident: ElfIdent,
-    pub(crate) ty: FileType,
-    pub(crate) machine: TargetMachine
+    pub ident: ElfIdent,
+    pub ty: FileType,
+    pub machine: TargetMachine,
+    pub version: u32,
+    pub entry_address: u64,
+    pub program_header_offset: u64,
+    pub section_header_offset: u64,
+    pub flags: u32,
+    pub file_header_size: u16,
+    pub program_header_size: u16,
+    pub program_header_count: u16,
+    pub section_header_size: u16,
+    pub section_header_count: u16,
+    pub string_table_index: u16
+}
+
+macro_rules! read_address_or_offset {
+    ($ident_field: ident, $slice_field: ident, $offset: expr) => {
+        match $ident_field.class {
+            ElfClass::Invalid => panic!("Invalid class type"), // TODO: Replace with error
+            ElfClass::Class32 => $ident_field.endian.read::<u32>($slice_field, Some($offset)).unwrap() as u64,
+            ElfClass::Class64 => $ident_field.endian.read::<u64>($slice_field, Some($offset)).unwrap()
+        }
+    }
 }
 
 impl FileHeader {
 
-    pub fn read(slice: &[u8], offset: usize) -> FileHeader {
+    pub fn read(slice: &[u8], mut offset: usize) -> FileHeader {
+        const IDENT_SIZE: usize = mem::size_of::<ElfIdent>();
+
         // Read indication bytes of file header
         let ident: ElfIdent = unsafe {
-            mem::transmute::<[u8; mem::size_of::<ElfIdent>()], ElfIdent>(slice
-                .get(offset..(offset + mem::size_of::<ElfIdent>())).unwrap().try_into().unwrap())
+            mem::transmute::<[u8; IDENT_SIZE], ElfIdent>(
+                slice.get(offset..(offset + IDENT_SIZE)).unwrap().try_into().unwrap()
+            )
         };
+        offset += 12;
 
-        let ty = ident.endian.read::<u16>(slice, Some(offset + 12)).unwrap();
-        let machine = ident.endian.read::<u16>(slice, Some(offset + 14)).unwrap();
+        // Read platform-independent sized fields
+        let ty = ident.endian.read::<u16>(slice, Some(&mut offset)).unwrap();
+        let machine = ident.endian.read::<u16>(slice, Some(&mut offset)).unwrap();
+        let version = ident.endian.read::<u32>(slice, Some(&mut offset)).unwrap();
 
+        // Read entrypoint address and some offsets. We also read he size of this header.
+        let entry_address = read_address_or_offset!(ident, slice, &mut offset);
+        let program_header_offset = read_address_or_offset!(ident, slice, &mut offset);
+        let section_header_offset = read_address_or_offset!(ident, slice, &mut offset);
+
+        // Read size of this header and flags
+        let flags = ident.endian.read::<u32>(slice, Some(&mut offset)).unwrap();
+        let file_header_size = ident.endian.read::<u16>(slice, Some(&mut offset)).unwrap();
+
+        // Read count and size of program headers
+        let program_header_size = ident.endian.read::<u16>(slice, Some(&mut offset)).unwrap();
+        let program_header_count = ident.endian.read::<u16>(slice, Some(&mut offset)).unwrap();
+
+        // Read count and size of section headers
+        let section_header_size = ident.endian.read::<u16>(slice, Some(&mut offset)).unwrap();
+        let section_header_count = ident.endian.read::<u16>(slice, Some(&mut offset)).unwrap();
+
+        // Read index of string table header
+        let string_table_index = ident.endian.read::<u16>(slice, Some(&mut offset)).unwrap();
+
+        // Create file header and return
         Self {
             ident,
             ty: FileType::from(ty),
-            machine: TargetMachine::from(machine)
+            machine: TargetMachine::from(machine),
+            version,
+            entry_address,
+            program_header_offset,
+            section_header_offset,
+            flags,
+            file_header_size,
+            program_header_size,
+            program_header_count,
+            section_header_size,
+            section_header_count,
+            string_table_index,
         }
-    }
-
-    #[inline]
-    pub const fn ident(&self) -> &ElfIdent {
-        &self.ident
     }
 }
