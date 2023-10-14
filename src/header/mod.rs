@@ -77,18 +77,53 @@ pub struct FileHeader {
     /// This struct represents the indication bytes of the ELF file without the ELF magic bytes. For
     /// more information, see [ElfIdent].
     pub ident: ElfIdent,
+
+    /// This field represents the type of the ELF file. For more information, see [FileType].
     pub ty: FileType,
+
+    /// This field represents the architecture target of the ELF file. For more information, see
+    /// [TargetMachine].
     pub machine: TargetMachine,
+
+    /// This field indicates the version fo the object file.
     pub version: u32,
-    pub entry_address: u64,
+
+    /// This field represents the virtual address of the entrypoint function. If there is not entry
+    /// this field is null. In this API, the field is none when there is no address.
+    pub entry_address: Option<u64>,
+
+    /// This field indicates the in-file offset for the program header tables. If there are no
+    /// program headers, this value is zero.
     pub program_header_offset: u64,
+
+    /// This field indicates the in-file offset for the section header tables. If there are no
+    /// section headers, this value is zero.
     pub section_header_offset: u64,
+
+    /// This field holds target-specific flags.
     pub flags: u32,
+
+    /// This field indicates the size of the ELF file header.
     pub file_header_size: u16,
+
+    /// This field indicates the size of a single program header. All program headers have the same
+    /// size.
     pub program_header_size: u16,
+
+    /// This field indicates the count of the program headers in the file. If there are no program
+    /// header, this value is zero.
     pub program_header_count: u16,
+
+    /// This field indicates the size of a single section header. All section headers have the same
+    /// size.
     pub section_header_size: u16,
+
+    /// This field indicates the count of the section headers in the file. If there are no section
+    /// header, this value is zero.
     pub section_header_count: u16,
+
+    /// This member holds the index of the string table index. If there is no string table, this
+    /// value is equal to `SHN_UNDEF`.
     pub string_table_index: u16
 }
 
@@ -104,6 +139,12 @@ macro_rules! read_address_or_offset {
 
 impl FileHeader {
 
+    /// This function parses the specified slice with the offset to a ELF header. Most parts of the
+    /// conversion is done with validation. After a successful parsing, this function returns
+    /// the header structure.
+    ///
+    /// Here is a list with all errors, which can occur while this operation:
+    /// - [Error::InvalidClass] - The provided ELF file's class is not valid
     pub fn read(slice: &[u8], mut offset: usize) -> Result<FileHeader, Error> {
         const IDENT_SIZE: usize = mem::size_of::<ElfIdent>();
 
@@ -146,7 +187,7 @@ impl FileHeader {
             ty: FileType::from(ty),
             machine: TargetMachine::from(machine),
             version,
-            entry_address,
+            entry_address: if entry_address == 0 { None } else { Some(entry_address) },
             program_header_offset,
             section_header_offset,
             flags,
