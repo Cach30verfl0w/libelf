@@ -38,7 +38,11 @@ pub enum Error {
     /// Some std I/O operation fails (Only available with `std`-feature)
     #[error(transparent)]
     #[cfg(feature = "std")]
-    IO(#[from] std::io::Error)
+    IO(#[from] std::io::Error),
+
+    /// The provided ELF file's class is not valid
+    #[error("The provided ELF file's class is not valid")]
+    InvalidClass
 }
 
 pub struct Elf {
@@ -59,6 +63,7 @@ impl Elf {
     /// Here is a list with all errors, which can occur while this operation:
     /// - [Error::InvalidMagic] - The magic bytes of the file can't be found
     /// - [Error::NotEnoughBytes] - The specified ELF data's size is not high enough to be a ELF file
+    /// - [Error::InvalidClass] - The provided ELF file's class is not valid
     pub fn from_bytes(bytes: &[u8]) -> Result<Elf, Error> {
         // Get index of ELF header and validate size of the file with magic bytes index as start
         // point
@@ -69,7 +74,7 @@ impl Elf {
 
         // Return parsed, validated and prepared ELF structure
         Ok(Elf {
-            header: FileHeader::read(bytes, index),
+            header: FileHeader::read(bytes, index)?,
         })
     }
 
@@ -82,6 +87,7 @@ impl Elf {
     /// - [Error::InvalidMagic] - The magic bytes of the file can't be found
     /// - [Error::IO] - Some std I/O operation fails (Only available with `std`-feature)
     /// - [Error::NotEnoughBytes] - The specified ELF file's is not big enough to be a ELF file
+    /// - [Error::InvalidClass] - The provided ELF file's class is not valid
     #[inline(always)]
     #[cfg(feature = "std")]
     pub fn from_path<P: AsRef<std::path::Path>>(path: P) -> Result<Elf, Error> {

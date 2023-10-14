@@ -1,4 +1,5 @@
 use std::mem;
+use crate::Error;
 use crate::header::ident::{ElfClass, ElfIdent};
 
 pub mod ident;
@@ -94,7 +95,7 @@ pub struct FileHeader {
 macro_rules! read_address_or_offset {
     ($ident_field: ident, $slice_field: ident, $offset: expr) => {
         match $ident_field.class {
-            ElfClass::Invalid => panic!("Invalid class type"), // TODO: Replace with error
+            ElfClass::Invalid => return Err(Error::InvalidClass),
             ElfClass::Class32 => $ident_field.endian.read::<u32>($slice_field, Some($offset)).unwrap() as u64,
             ElfClass::Class64 => $ident_field.endian.read::<u64>($slice_field, Some($offset)).unwrap()
         }
@@ -103,7 +104,7 @@ macro_rules! read_address_or_offset {
 
 impl FileHeader {
 
-    pub fn read(slice: &[u8], mut offset: usize) -> FileHeader {
+    pub fn read(slice: &[u8], mut offset: usize) -> Result<FileHeader, Error> {
         const IDENT_SIZE: usize = mem::size_of::<ElfIdent>();
 
         // Read indication bytes of file header
@@ -140,7 +141,7 @@ impl FileHeader {
         let string_table_index = ident.endian.read::<u16>(slice, Some(&mut offset)).unwrap();
 
         // Create file header and return
-        Self {
+        Ok(Self {
             ident,
             ty: FileType::from(ty),
             machine: TargetMachine::from(machine),
@@ -155,6 +156,6 @@ impl FileHeader {
             section_header_size,
             section_header_count,
             string_table_index,
-        }
+        })
     }
 }
