@@ -81,17 +81,17 @@ pub struct FileHeader {
 }
 
 impl FileHeader {
-    type ElfIdentArray = [u8; mem::size_of::<ElfIdent>()];
 
     pub fn read(slice: &[u8], offset: usize) -> FileHeader {
         // Read indication bytes of file header
-        let ident: ElfIdent = unsafe { mem::transmute::<Self::ElfIdentArray, ElfIdent>(
-            slice.get(offset..(offset + mem::size_of::<ElfIdent>())).unwrap().try_into().unwrap()
-        )};
+        let ident: ElfIdent = unsafe {
+            mem::transmute::<[u8; mem::size_of::<ElfIdent>()], ElfIdent>(slice
+                .get(offset..(offset + mem::size_of::<ElfIdent>())).unwrap().try_into().unwrap())
+        };
 
         let ty = ident.endian.read::<u16>(slice, Some(offset + 12)).unwrap();
         let machine = ident.endian.read::<u16>(slice, Some(offset + 14)).unwrap();
-        
+
         Self {
             ident,
             ty: FileType::from(ty),
@@ -100,7 +100,7 @@ impl FileHeader {
     }
 
     #[inline]
-    pub fn ident(&self) -> &ElfIdent {
+    pub const fn ident(&self) -> &ElfIdent {
         &self.ident
     }
 }

@@ -1,4 +1,3 @@
-#![feature(inherent_associated_types)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(test)]
@@ -116,7 +115,7 @@ impl Elf {
 
     /// This function returns a reference to the file header.
     #[inline]
-    fn file_header(&self) -> &FileHeader {
+    const fn file_header(&self) -> &FileHeader {
         &self.header
     }
 
