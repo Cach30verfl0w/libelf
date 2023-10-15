@@ -50,13 +50,14 @@ pub enum Error {
     InvalidClass
 }
 
-pub struct Elf {
+pub struct Elf<'a> {
     header: FileHeader,
     program_headers: Option<Vec<ProgramHeader>>,
-    section_headers: Option<Vec<SectionHeader>>
+    section_headers: Option<Vec<SectionHeader>>,
+    bytes: &'a [u8]
 }
 
-impl Elf {
+impl<'a> Elf<'a> {
     /// This field contains the magic bytes of an ELF file
     const MAGIC_BYTES: [u8; 4] = [0x7F, 0x45, 0x4C, 0x46];
 
@@ -71,7 +72,7 @@ impl Elf {
     /// - [Error::InvalidMagic] - The magic bytes of the file can't be found
     /// - [Error::NotEnoughBytes] - The specified ELF data's size is not high enough to be a ELF file
     /// - [Error::InvalidClass] - The provided ELF file's class is not valid
-    pub fn from_bytes(bytes: &[u8]) -> Result<Elf, Error> {
+    pub fn from_bytes(bytes: &'a [u8]) -> Result<Self, Error> {
         // Get index of ELF header and validate size of the file with magic bytes index as start
         // point
         let index = Self::elf_index(bytes).ok_or(Error::InvalidMagic)? + 4;
@@ -112,37 +113,9 @@ impl Elf {
         Ok(Elf {
             header,
             program_headers,
-            section_headers
+            section_headers,
+            bytes: &bytes[(index - 4)..bytes.len()]
         })
-    }
-
-    /// This function accepts the specified path, opens the file and reads the content into a byte
-    /// slice. The byte slice is given to the [Elf::from_bytes] function.
-    ///
-    /// **This function uses heap allocations to read the file into a in-memory structure**
-    ///
-    /// Here is a list with all errors, which can occur while this operation:
-    /// - [Error::InvalidMagic] - The magic bytes of the file can't be found
-    /// - [Error::IO] - Some std I/O operation fails (Only available with `std`-feature)
-    /// - [Error::NotEnoughBytes] - The specified ELF file's is not big enough to be a ELF file
-    /// - [Error::InvalidClass] - The provided ELF file's class is not valid
-    #[inline(always)]
-    #[cfg(feature = "std")]
-    pub fn from_path<P: AsRef<std::path::Path>>(path: P) -> Result<Elf, Error> {
-        use std::{fs::File, io::Read};
-
-        // Read file into bytes
-        let mut file = File::open(path)?;
-        let mut bytes = Vec::new();
-        let length = file.read_to_end(&mut bytes)?;
-
-        // Validate file length
-        if length < Self::MIN_ELF_SIZE {
-            return Err(Error::NotEnoughBytes(length));
-        }
-
-        // Give from_bytes to bytes as slice
-        Self::from_bytes(bytes.as_slice())
     }
 
     /// This function scans the specified data for the ELF magic bytes. If no magic bytes are found

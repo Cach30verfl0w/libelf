@@ -1,6 +1,6 @@
 use bitflags::bitflags;
 use crate::std::mem;
-use crate::Error;
+use crate::{Elf, Error};
 use crate::header::ident::{ElfClass, ElfIdent};
 
 pub mod ident;
@@ -420,6 +420,19 @@ impl ProgramHeader {
         program_header.alignment = read_class_dependent!(ident, slice, &mut offset);
         Ok(program_header)
     }
+
+    /// This functions reads the data of the segment by the specified ELF file. The data is returned
+    /// as an sub-slice of the ELF slice.
+    ///
+    /// Here is a list with all errors, which can occur while this operation:
+    /// - [Error::NotEnoughBytes] - Size of byte slice is too low for data reading operation
+    pub fn data<'a, 'b>(&self, elf: &Elf<'b>) -> Result<&'a [u8], Error> where 'b: 'a {
+        if elf.bytes.len() - (self.offset as usize) >= (self.file_size as usize) {
+            Ok(&elf.bytes[(self.offset as usize)..((self.offset + self.file_size) as usize)])
+        } else {
+            Err(Error::NotEnoughBytes((self.offset + self.file_size) as usize))
+        }
+    }
 }
 
 /// This enum represents every available type of an ELF section. This enum is used by the library
@@ -578,5 +591,18 @@ impl SectionHeader {
         program_header.addr_align = read_class_dependent!(ident, slice, &mut offset);
         program_header.entry_size = read_class_dependent!(ident, slice, &mut offset);
         Ok(program_header)
+    }
+
+    /// This functions reads the data of the section by the specified ELF file. The data is returned
+    /// as an sub-slice of the ELF slice.
+    ///
+    /// Here is a list with all errors, which can occur while this operation:
+    /// - [Error::NotEnoughBytes] - Size of byte slice is too low for data reading operation
+    pub fn data<'a, 'b>(&self, elf: &Elf<'b>) -> Result<&'a [u8], Error> where 'b: 'a {
+        if elf.bytes.len() - (self.offset as usize) >= (self.size as usize) {
+            Ok(&elf.bytes[(self.offset as usize)..((self.offset + self.size) as usize)])
+        } else {
+            Err(Error::NotEnoughBytes((self.offset + self.size) as usize))
+        }
     }
 }

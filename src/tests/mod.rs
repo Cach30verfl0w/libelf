@@ -1,4 +1,3 @@
-use core::any::Any;
 use crate::Elf;
 use crate::header::{FileType, SectionFlags, SectionType, SegmentFlags, SegmentType, TargetMachine};
 use crate::header::ident::{ElfClass, ElfEndian, ElfOsABI, ElfVersion};
