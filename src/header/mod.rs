@@ -600,7 +600,11 @@ impl SectionHeader {
     /// - [Error::NotEnoughBytes] - Size of byte slice is too low for data reading operation
     pub fn data<'a, 'b>(&self, elf: &Elf<'b>) -> Result<&'a [u8], Error> where 'b: 'a {
         if elf.bytes.len() - (self.offset as usize) >= (self.size as usize) {
-            Ok(&elf.bytes[(self.offset as usize)..((self.offset + self.size) as usize)])
+            Ok(if self.ty != SectionType::NoBits {
+                &elf.bytes[(self.offset as usize)..((self.offset + self.size) as usize)]
+            } else {
+                &[]
+            })
         } else {
             Err(Error::NotEnoughBytes((self.offset + self.size) as usize))
         }
