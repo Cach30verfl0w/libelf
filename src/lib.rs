@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 #[cfg(not(feature = "std"))]
 pub use core as std;
 use crate::std::mem::size_of;
-use crate::header::{FileHeader, ProgramHeader};
+use crate::header::{FileHeader, ProgramHeader, SectionHeader};
 use crate::header::ident::ElfIdent;
 
 // Inform a potential user that this library is not intended for use in production environments.
@@ -52,7 +52,8 @@ pub enum Error {
 
 pub struct Elf {
     header: FileHeader,
-    program_headers: Option<Vec<ProgramHeader>>
+    program_headers: Option<Vec<ProgramHeader>>,
+    section_headers: Option<Vec<SectionHeader>>
 }
 
 impl Elf {
@@ -84,7 +85,7 @@ impl Elf {
         // Read all program headers
         let program_headers = if header.program_header_count > 0 {
             let mut program_headers = Vec::new();
-            for i in 0..header.program_header_size {
+            for i in 0..header.section_header_count {
                 program_headers.push(ProgramHeader::read(
                     &header.ident,
                     bytes,
@@ -94,10 +95,24 @@ impl Elf {
             Some(program_headers)
         } else { None };
 
+        // Read all section headers
+        let section_headers = if header.section_header_count > 0 {
+            let mut section_headers = Vec::new();
+            for i in 0..header.section_header_count {
+                section_headers.push(SectionHeader::read(
+                    &header.ident,
+                    bytes,
+                    index - 4 + header.section_header_offset as usize + (i * header.section_header_size) as usize
+                )?);
+            }
+            Some(section_headers)
+        } else { None };
+
         // Return parsed, validated and prepared ELF structure
         Ok(Elf {
             header,
-            program_headers
+            program_headers,
+            section_headers
         })
     }
 
@@ -144,8 +159,17 @@ impl Elf {
 
     /// This function returns a reference to the file header.
     #[inline]
-    const fn file_header(&self) -> &FileHeader {
+    pub const fn file_header(&self) -> &FileHeader {
         &self.header
     }
 
+    #[inline]
+    pub const fn program_headers(&self) -> Option<&Vec<ProgramHeader>> {
+        self.program_headers.as_ref()
+    }
+
+    #[inline]
+    pub const fn section_headers(&self) -> Option<&Vec<SectionHeader>> {
+        self.section_headers.as_ref()
+    }
 }

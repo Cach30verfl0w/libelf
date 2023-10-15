@@ -390,9 +390,9 @@ impl ProgramHeader {
     ///
     /// ## See also
     /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
-    pub fn read(ident: &ElfIdent, slice: &[u8], mut offset: usize) -> Result<ProgramHeader, Error> {
+    pub fn read(ident: &ElfIdent, slice: &[u8], mut offset: usize) -> Result<Self, Error> {
         let endian = &ident.endian;
-        let mut program_header = ProgramHeader::default();
+        let mut program_header = Self::default();
         program_header.ty = SegmentType::from(ident.endian.read::<u32>(slice, Some(&mut offset)).unwrap());
 
         // Read elf flags if 64-bit ELF
@@ -520,37 +520,63 @@ bitflags! {
 #[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug, Hash, Default)]
 pub struct SectionHeader {
     /// This field indicates the index of the name in the string table.
-    name: u32,
+    pub name: u32,
 
     /// This field indicates the type of this section.
-    ty: SectionType,
+    pub ty: SectionType,
 
     /// This field indicates the flags of this section.
-    flags: SectionFlags,
+    pub flags: SectionFlags,
 
     /// This field indicates the address of the first byte, if this section will appear in the
     /// memory.
-    addr: u64,
+    pub addr: u64,
 
     /// This field indicates the offset of the first byte of the section from the start of the
     /// ELF data.
-    offset: u64,
+    pub offset: u64,
 
     /// This field indicates the size of the section in bytes.
-    size: u64,
+    pub size: u64,
 
     /// This field indicates a section header table link index. (Interpretation depends on section
     /// type)
-    link: u32,
+    pub link: u32,
 
     /// This field holds extra information about this section. (Interpretation depends on section
     /// type)
-    info: u32,
+    pub info: u32,
 
     /// This field indicates the alignment for this section.
-    addr_align: u64,
+    pub addr_align: u64,
 
     /// This field indicates the size of fixed-size entries. This value is zero if there are no
     /// entries. This value is used in sections like the symbol table.
-    entry_size: u64
+    pub entry_size: u64
+}
+
+impl SectionHeader {
+    /// This function reads the data from the section (with offset) and parses it into a
+    /// [SectionHeader] structure for the ELF file.
+    ///
+    /// Here is a list with all errors, which can occur while this operation:
+    /// - [Error::InvalidClass] - The provided ELF file's class is not valid
+    ///
+    /// ## See also
+    /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
+    pub fn read(ident: &ElfIdent, slice: &[u8], mut offset: usize) -> Result<Self, Error> {
+        let endian = &ident.endian;
+        let mut program_header = Self::default();
+        program_header.name = endian.read::<u32>(slice, Some(&mut offset)).unwrap();
+        program_header.ty = SectionType::from(endian.read::<u32>(slice, Some(&mut offset)).unwrap());
+        program_header.flags = SectionFlags::from_bits_retain(read_class_dependent!(ident, slice, &mut offset));
+        program_header.addr = read_class_dependent!(ident, slice, &mut offset);
+        program_header.offset = read_class_dependent!(ident, slice, &mut offset);
+        program_header.size = read_class_dependent!(ident, slice, &mut offset);
+        program_header.link = endian.read::<u32>(slice, Some(&mut offset)).unwrap();
+        program_header.info = endian.read::<u32>(slice, Some(&mut offset)).unwrap();
+        program_header.addr_align = read_class_dependent!(ident, slice, &mut offset);
+        program_header.entry_size = read_class_dependent!(ident, slice, &mut offset);
+        Ok(program_header)
+    }
 }

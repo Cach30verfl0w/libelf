@@ -1,5 +1,6 @@
+use core::any::Any;
 use crate::Elf;
-use crate::header::{FileType, SegmentFlags, SegmentType, TargetMachine};
+use crate::header::{FileType, SectionFlags, SectionType, SegmentFlags, SegmentType, TargetMachine};
 use crate::header::ident::{ElfClass, ElfEndian, ElfOsABI, ElfVersion};
 
 #[test]
@@ -38,9 +39,65 @@ fn test_file_header() {
 }
 
 #[test]
+fn test_section_headers() {
+    let elf = Elf::from_bytes(include_bytes!("hello-world")).unwrap();
+    let section_headers = elf.section_headers().unwrap();
+
+    // Check first section header
+    let section_header = section_headers.get(0).unwrap();
+    assert_eq!(section_header.ty, SectionType::Null);
+    assert_eq!(section_header.addr, 0x0);
+    assert_eq!(section_header.offset, 0x0);
+    assert_eq!(section_header.flags, SectionFlags::empty());
+    assert_eq!(section_header.link, 0);
+    assert_eq!(section_header.info, 0);
+    assert_eq!(section_header.addr_align, 0x0);
+
+    // Check second section header
+    let section_header = section_headers.get(1).unwrap();
+    assert_eq!(section_header.ty, SectionType::ProgBits);
+    assert_eq!(section_header.addr, 0x350);
+    assert_eq!(section_header.offset, 0x350);
+    assert_eq!(section_header.flags, SectionFlags::ALLOC);
+    assert_eq!(section_header.link, 0);
+    assert_eq!(section_header.info, 0);
+    assert_eq!(section_header.addr_align, 0x1);
+
+    // Check third section header
+    let section_header = section_headers.get(2).unwrap();
+    assert_eq!(section_header.ty, SectionType::Note);
+    assert_eq!(section_header.addr, 0x370);
+    assert_eq!(section_header.offset, 0x370);
+    assert_eq!(section_header.flags, SectionFlags::ALLOC);
+    assert_eq!(section_header.link, 0);
+    assert_eq!(section_header.info, 0);
+    assert_eq!(section_header.addr_align, 0x8);
+
+    // Check fourth section header
+    let section_header = section_headers.get(3).unwrap();
+    assert_eq!(section_header.ty, SectionType::Note);
+    assert_eq!(section_header.addr, 0x390);
+    assert_eq!(section_header.offset, 0x390);
+    assert_eq!(section_header.flags, SectionFlags::ALLOC);
+    assert_eq!(section_header.link, 0);
+    assert_eq!(section_header.info, 0);
+    assert_eq!(section_header.addr_align, 0x4);
+
+    // Check sixth section header
+    let section_header = section_headers.get(4).unwrap();
+    assert_eq!(section_header.ty, SectionType::Note);
+    assert_eq!(section_header.addr, 0x3B4);
+    assert_eq!(section_header.offset, 0x3B4);
+    assert_eq!(section_header.flags, SectionFlags::ALLOC);
+    assert_eq!(section_header.link, 0);
+    assert_eq!(section_header.info, 0);
+    assert_eq!(section_header.addr_align, 0x4);
+}
+
+#[test]
 fn test_program_headers() {
     let elf = Elf::from_bytes(include_bytes!("hello-world")).unwrap();
-    let program_headers = elf.program_headers.as_ref().unwrap();
+    let program_headers = elf.program_headers().unwrap();
 
     // Check first program header
     let program_header = program_headers.get(0).unwrap();
