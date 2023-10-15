@@ -474,18 +474,40 @@ impl From<u32> for SectionType {
 }
 
 bitflags! {
+    /// This structure contains all flags for a section in an ELF file
     #[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug, Hash, Default)]
     pub struct SectionFlags: u64 {
+        /// This section is writable during execution
         const WRITE            = 0x1;
+
+        /// This section occupies memory during process execution
         const ALLOC            = 0x2;
+
+        /// This section contains executable machine instructions
         const INSTRUCTIONS     = 0x4;
+
+        /// The data in this section should be merged to avoid duplication
         const MERGE            = 0x10;
+
+        /// This data section holds null-terminated strings
         const STRINGS          = 0x20;
+
+        /// The `info` field of this header contains a section header table index
         const INFO_LINK        = 0x40;
+
+        /// This flag adds special ordering requirements for link editors
         const LINK_ORDER       = 0x80;
+
+        /// This section requires special OS-specific processing to avoid incorrect behavior
         const OS_NONCONFORMING = 0x100;
+
+        /// This section is a member of a group
         const GROUP            = 0x200;
+
+        /// This section holds the thread-local-storage
         const TLS              = 0x400;
+
+        /// This section contains compressed data
         const COMPRESSED       = 0x800;
     }
 }
