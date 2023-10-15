@@ -35,17 +35,19 @@ pub enum FileType {
     Relocatable  = 1,
     Executable   = 2,
     SharedObject = 3,
-    Core         = 4
+    Core         = 4,
+    Unknown(u16) = 5
 }
 
 impl From<u16> for FileType {
     fn from(value: u16) -> Self {
         match value {
+            0 => Self::None,
             1 => Self::Relocatable,
             2 => Self::Executable,
             3 => Self::SharedObject,
             4 => Self::Core,
-            _ => Self::None
+            value => Self::Unknown(value)
         }
     }
 }
@@ -281,12 +283,14 @@ pub enum SegmentType {
     GNUProperty = 0x6474E553,
     GNUEhFrame = 0x6474E550,
     GNUStack = 0x6474E551,
-    GNURelro = 0x6474E552
+    GNURelro = 0x6474E552,
+    Unknown(u32) = 0xFFFFFFFF
 }
 
 impl From<u32> for SegmentType {
     fn from(value: u32) -> Self {
         match value {
+            0x00000000 => Self::Null,
             0x00000001 => Self::Load,
             0x00000002 => Self::Dynamic,
             0x00000003 => Self::Interp,
@@ -298,7 +302,7 @@ impl From<u32> for SegmentType {
             0x6474E550 => Self::GNUEhFrame,
             0x6474E551 => Self::GNUStack,
             0x6474E552 => Self::GNURelro,
-            _ => Self::Null
+            value => Self::Unknown(value)
         }
     }
 }
@@ -416,4 +420,91 @@ impl ProgramHeader {
         program_header.alignment = read_class_dependent!(ident, slice, &mut offset);
         Ok(program_header)
     }
+}
+
+/// This enum represents every available type of an ELF section. This enum is used by the library
+/// to make the API more user-friendly.
+#[repr(u32)]
+#[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug, Hash, Default)]
+pub enum SectionType {
+    #[default]
+    Null = 0,
+    ProgBits = 1,
+    SymbolTable = 2,
+    StringTable = 3,
+    Rela = 4,
+    Hash = 5,
+    Dynamic = 6,
+    Note = 7,
+    NoBits = 8,
+    Rel = 9,
+    ShLib = 10,
+    DynamicSymbol = 11,
+    InitArray = 14,
+    FiniArray = 15,
+    PreInitArray = 16,
+    Group = 17,
+    SymbolTableIndex = 81,
+    Unknown(u32)
+}
+
+impl From<u32> for SectionType {
+    fn from(value: u32) -> Self {
+        match value {
+            0 => Self::Null,
+            1 => Self::ProgBits,
+            2 => Self::SymbolTable,
+            3 => Self::StringTable,
+            4 => Self::Rela,
+            5 => Self::Hash,
+            6 => Self::Dynamic,
+            7 => Self::Note,
+            8 => Self::NoBits,
+            9 => Self::Rel,
+            10 => Self::ShLib,
+            11 => Self::DynamicSymbol,
+            14 => Self::InitArray,
+            15 => Self::FiniArray,
+            16 => Self::PreInitArray,
+            17 => Self::Group,
+            81 => Self::SymbolTableIndex,
+            value => Self::Unknown(value)
+        }
+    }
+}
+
+bitflags! {
+    #[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug, Hash, Default)]
+    pub struct SectionFlags: u64 {
+        const WRITE            = 0x1;
+        const ALLOC            = 0x2;
+        const INSTRUCTIONS     = 0x4;
+        const MERGE            = 0x10;
+        const STRINGS          = 0x20;
+        const INFO_LINK        = 0x40;
+        const LINK_ORDER       = 0x80;
+        const OS_NONCONFORMING = 0x100;
+        const GROUP            = 0x200;
+        const TLS              = 0x400;
+        const COMPRESSED       = 0x800;
+    }
+}
+
+/// This structure represents the header of an ELF section. This header contains some information
+/// about the section in the ELF file.
+///
+/// ## See also
+/// - [Sections](https://www.sco.com/developers/gabi/latest/ch4.sheader.html) by SCO, Inc.
+#[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug, Hash, Default)]
+pub struct SectionHeader {
+    name: u32,
+    ty: SectionType,
+    flags: SectionFlags,
+    addr: u64,
+    offset: u64,
+    size: u64,
+    link: u32,
+    info: u32,
+    addr_align: u64,
+    entry_size: u64
 }
