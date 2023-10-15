@@ -519,14 +519,38 @@ bitflags! {
 /// - [Sections](https://www.sco.com/developers/gabi/latest/ch4.sheader.html) by SCO, Inc.
 #[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug, Hash, Default)]
 pub struct SectionHeader {
+    /// This field indicates the index of the name in the string table.
     name: u32,
+
+    /// This field indicates the type of this section.
     ty: SectionType,
+
+    /// This field indicates the flags of this section.
     flags: SectionFlags,
+
+    /// This field indicates the address of the first byte, if this section will appear in the
+    /// memory.
     addr: u64,
+
+    /// This field indicates the offset of the first byte of the section from the start of the
+    /// ELF data.
     offset: u64,
+
+    /// This field indicates the size of the section in bytes.
     size: u64,
+
+    /// This field indicates a section header table link index. (Interpretation depends on section
+    /// type)
     link: u32,
+
+    /// This field holds extra information about this section. (Interpretation depends on section
+    /// type)
     info: u32,
+
+    /// This field indicates the alignment for this section.
     addr_align: u64,
+
+    /// This field indicates the size of fixed-size entries. This value is zero if there are no
+    /// entries. This value is used in sections like the symbol table.
     entry_size: u64
 }
