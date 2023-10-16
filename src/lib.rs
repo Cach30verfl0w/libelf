@@ -2,25 +2,27 @@
 
 extern crate alloc;
 
-#[cfg(test)]
-pub mod tests;
-pub mod header;
 pub mod endian;
+pub mod header;
+#[cfg(test)] pub mod tests;
 
 use compile_warning::compile_warning;
 use thiserror_no_std::Error;
 
-#[cfg(feature = "std")]
-pub use std;
+#[cfg(feature = "std")] pub use std;
 
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
+#[cfg(not(feature = "std"))] use alloc::vec::Vec;
 
-#[cfg(not(feature = "std"))]
-pub use core as std;
-use crate::std::mem::size_of;
-use crate::header::{FileHeader, ProgramHeader, SectionHeader};
-use crate::header::ident::ElfIdent;
+use crate::{
+    header::{
+        ident::ElfIdent,
+        FileHeader,
+        ProgramHeader,
+        SectionHeader,
+    },
+    std::mem::size_of,
+};
+#[cfg(not(feature = "std"))] pub use core as std;
 
 // Inform a potential user that this library is not intended for use in production environments.
 // This is for the reason that this project is only a project so that I can get more familiar with
@@ -47,14 +49,14 @@ pub enum Error {
 
     /// The provided ELF file's class is not valid
     #[error("The provided ELF file's class is not valid")]
-    InvalidClass
+    InvalidClass,
 }
 
 pub struct Elf<'a> {
     header: FileHeader,
     program_headers: Option<Vec<ProgramHeader>>,
     section_headers: Option<Vec<SectionHeader>>,
-    bytes: &'a [u8]
+    bytes: &'a [u8],
 }
 
 impl<'a> Elf<'a> {
@@ -90,11 +92,15 @@ impl<'a> Elf<'a> {
                 program_headers.push(ProgramHeader::read(
                     &header.ident,
                     bytes,
-                    index - 4 + header.program_header_offset as usize + (i * header.program_header_size) as usize
+                    index - 4
+                        + header.program_header_offset as usize
+                        + (i * header.program_header_size) as usize,
                 )?);
             }
             Some(program_headers)
-        } else { None };
+        } else {
+            None
+        };
 
         // Read all section headers
         let section_headers = if header.section_header_count > 0 {
@@ -103,18 +109,22 @@ impl<'a> Elf<'a> {
                 section_headers.push(SectionHeader::read(
                     &header.ident,
                     bytes,
-                    index - 4 + header.section_header_offset as usize + (i * header.section_header_size) as usize
+                    index - 4
+                        + header.section_header_offset as usize
+                        + (i * header.section_header_size) as usize,
                 )?);
             }
             Some(section_headers)
-        } else { None };
+        } else {
+            None
+        };
 
         // Return parsed, validated and prepared ELF structure
         Ok(Elf {
             header,
             program_headers,
             section_headers,
-            bytes: &bytes[(index - 4)..bytes.len()]
+            bytes: &bytes[(index - 4)..bytes.len()],
         })
     }
 

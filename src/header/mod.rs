@@ -1,7 +1,13 @@
+use crate::{
+    header::ident::{
+        ElfClass,
+        ElfIdent,
+    },
+    std::mem,
+    Elf,
+    Error,
+};
 use bitflags::bitflags;
-use crate::std::mem;
-use crate::{Elf, Error};
-use crate::header::ident::{ElfClass, ElfIdent};
 
 pub mod ident;
 
@@ -9,10 +15,20 @@ macro_rules! read_class_dependent {
     ($ident_field: expr, $slice_field: ident, $offset: expr) => {
         match $ident_field.class {
             ElfClass::Invalid => return Err(Error::InvalidClass),
-            ElfClass::Class32 => $ident_field.endian.read::<u32>($slice_field, Some($offset)).unwrap() as u64,
-            ElfClass::Class64 => $ident_field.endian.read::<u64>($slice_field, Some($offset)).unwrap()
+            ElfClass::Class32 => {
+                $ident_field
+                    .endian
+                    .read::<u32>($slice_field, Some($offset))
+                    .unwrap() as u64
+            }
+            ElfClass::Class64 => {
+                $ident_field
+                    .endian
+                    .read::<u64>($slice_field, Some($offset))
+                    .unwrap()
+            }
         }
-    }
+    };
 }
 
 /// This enum represents the type of the ELF file. The file can be a relocatable file, an executable
@@ -47,7 +63,7 @@ impl From<u16> for FileType {
             2 => Self::Executable,
             3 => Self::SharedObject,
             4 => Self::Core,
-            value => Self::Unknown(value)
+            value => Self::Unknown(value),
         }
     }
 }
@@ -82,7 +98,7 @@ impl From<u16> for TargetMachine {
             40 => Self::ARM,
             183 => Self::ARM64,
             243 => Self::RISCV,
-            _ => Self::None
+            _ => Self::None,
         }
     }
 }
@@ -148,11 +164,10 @@ pub struct FileHeader {
 
     /// This member holds the index of the string table index. If there is no string table, this
     /// value is equal to `SHN_UNDEF`.
-    pub string_table_index: u16
+    pub string_table_index: u16,
 }
 
 impl FileHeader {
-
     /// This function parses the specified slice with the offset to a ELF header. Most parts of the
     /// conversion is done with validation. After a successful parsing, this function returns
     /// the header structure.
@@ -165,7 +180,11 @@ impl FileHeader {
         // Read indication bytes of file header
         let ident: ElfIdent = unsafe {
             mem::transmute::<[u8; IDENT_SIZE], ElfIdent>(
-                slice.get(offset..(offset + IDENT_SIZE)).unwrap().try_into().unwrap()
+                slice
+                    .get(offset..(offset + IDENT_SIZE))
+                    .unwrap()
+                    .try_into()
+                    .unwrap(),
             )
         };
         offset += 12;
@@ -201,7 +220,11 @@ impl FileHeader {
             ty: FileType::from(ty),
             machine: TargetMachine::from(machine),
             version,
-            entry_address: if entry_address == 0 { None } else { Some(entry_address) },
+            entry_address: if entry_address == 0 {
+                None
+            } else {
+                Some(entry_address)
+            },
             program_header_offset,
             section_header_offset,
             flags,
@@ -284,7 +307,7 @@ pub enum SegmentType {
     GNUEhFrame = 0x6474E550,
     GNUStack = 0x6474E551,
     GNURelro = 0x6474E552,
-    Unknown(u32) = 0xFFFFFFFF
+    Unknown(u32) = 0xFFFFFFFF,
 }
 
 impl From<u32> for SegmentType {
@@ -302,7 +325,7 @@ impl From<u32> for SegmentType {
             0x6474E550 => Self::GNUEhFrame,
             0x6474E551 => Self::GNUStack,
             0x6474E552 => Self::GNURelro,
-            value => Self::Unknown(value)
+            value => Self::Unknown(value),
         }
     }
 }
@@ -378,7 +401,7 @@ pub struct ProgramHeader {
     ///
     /// ## See also
     /// - [Program Header](https://www.sco.com/developers/gabi/latest/ch5.pheader.html) by SCO, Inc.
-    pub alignment: u64
+    pub alignment: u64,
 }
 
 impl ProgramHeader {
@@ -393,13 +416,13 @@ impl ProgramHeader {
     pub fn read(ident: &ElfIdent, slice: &[u8], mut offset: usize) -> Result<Self, Error> {
         let endian = &ident.endian;
         let mut program_header = Self::default();
-        program_header.ty = SegmentType::from(ident.endian.read::<u32>(slice, Some(&mut offset)).unwrap());
+        program_header.ty =
+            SegmentType::from(ident.endian.read::<u32>(slice, Some(&mut offset)).unwrap());
 
         // Read elf flags if 64-bit ELF
         if ident.class == ElfClass::Class64 {
-            program_header.flags = SegmentFlags::from_bits_retain(
-                endian.read(slice, Some(&mut offset)).unwrap()
-            );
+            program_header.flags =
+                SegmentFlags::from_bits_retain(endian.read(slice, Some(&mut offset)).unwrap());
         }
 
         // Read values in center of header
@@ -411,9 +434,8 @@ impl ProgramHeader {
 
         // Read elf flags if 32-bit ELF
         if ident.class == ElfClass::Class32 {
-            program_header.flags = SegmentFlags::from_bits_retain(
-                endian.read(slice, Some(&mut offset)).unwrap()
-            );
+            program_header.flags =
+                SegmentFlags::from_bits_retain(endian.read(slice, Some(&mut offset)).unwrap());
         }
 
         // Read alignment and return program header
@@ -426,11 +448,16 @@ impl ProgramHeader {
     ///
     /// Here is a list with all errors, which can occur while this operation:
     /// - [Error::NotEnoughBytes] - Size of byte slice is too low for data reading operation
-    pub fn data<'a, 'b>(&self, elf: &Elf<'b>) -> Result<&'a [u8], Error> where 'b: 'a {
+    pub fn data<'a, 'b>(&self, elf: &Elf<'b>) -> Result<&'a [u8], Error>
+    where
+        'b: 'a,
+    {
         if elf.bytes.len() - (self.offset as usize) >= (self.file_size as usize) {
             Ok(&elf.bytes[(self.offset as usize)..((self.offset + self.file_size) as usize)])
         } else {
-            Err(Error::NotEnoughBytes((self.offset + self.file_size) as usize))
+            Err(Error::NotEnoughBytes(
+                (self.offset + self.file_size) as usize,
+            ))
         }
     }
 }
@@ -458,7 +485,7 @@ pub enum SectionType {
     PreInitArray = 16,
     Group = 17,
     SymbolTableIndex = 81,
-    Unknown(u32)
+    Unknown(u32),
 }
 
 impl From<u32> for SectionType {
@@ -481,7 +508,7 @@ impl From<u32> for SectionType {
             16 => Self::PreInitArray,
             17 => Self::Group,
             81 => Self::SymbolTableIndex,
-            value => Self::Unknown(value)
+            value => Self::Unknown(value),
         }
     }
 }
@@ -565,7 +592,7 @@ pub struct SectionHeader {
 
     /// This field indicates the size of fixed-size entries. This value is zero if there are no
     /// entries. This value is used in sections like the symbol table.
-    pub entry_size: u64
+    pub entry_size: u64,
 }
 
 impl SectionHeader {
@@ -582,7 +609,8 @@ impl SectionHeader {
         let mut program_header = Self::default();
         program_header.name = endian.read::<u32>(slice, Some(&mut offset)).unwrap();
         program_header.ty = SectionType::from(endian.read::<u32>(slice, Some(&mut offset)).unwrap());
-        program_header.flags = SectionFlags::from_bits_retain(read_class_dependent!(ident, slice, &mut offset));
+        program_header.flags =
+            SectionFlags::from_bits_retain(read_class_dependent!(ident, slice, &mut offset));
         program_header.addr = read_class_dependent!(ident, slice, &mut offset);
         program_header.offset = read_class_dependent!(ident, slice, &mut offset);
         program_header.size = read_class_dependent!(ident, slice, &mut offset);
@@ -598,7 +626,10 @@ impl SectionHeader {
     ///
     /// Here is a list with all errors, which can occur while this operation:
     /// - [Error::NotEnoughBytes] - Size of byte slice is too low for data reading operation
-    pub fn data<'a, 'b>(&self, elf: &Elf<'b>) -> Result<&'a [u8], Error> where 'b: 'a {
+    pub fn data<'a, 'b>(&self, elf: &Elf<'b>) -> Result<&'a [u8], Error>
+    where
+        'b: 'a,
+    {
         if elf.bytes.len() - (self.offset as usize) >= (self.size as usize) {
             Ok(if self.ty != SectionType::NoBits {
                 &elf.bytes[(self.offset as usize)..((self.offset + self.size) as usize)]

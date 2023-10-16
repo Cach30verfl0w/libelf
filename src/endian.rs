@@ -8,13 +8,17 @@ impl ElfEndian {
 }
 
 pub trait EndianReader {
-    fn read_with_endian(slice: &[u8], endian: ElfEndian, offset: Option<&mut usize>) -> Option<Self> where Self: Sized;
+    fn read_with_endian(slice: &[u8], endian: ElfEndian, offset: Option<&mut usize>) -> Option<Self>
+    where
+        Self: Sized;
 }
 
 macro_rules! impl_endian_reader {
     ($ty: ty) => {
         impl EndianReader for $ty {
-            fn read_with_endian(slice: &[u8], endian: ElfEndian, offset: Option<&mut usize>) -> Option<Self> {
+            fn read_with_endian(
+                slice: &[u8], endian: ElfEndian, offset: Option<&mut usize>,
+            ) -> Option<Self> {
                 const SELF_SIZE: usize = crate::std::mem::size_of::<$ty>();
 
                 let offset_usize = offset.as_ref().map(|value| **value).unwrap_or(0);
@@ -26,11 +30,11 @@ macro_rules! impl_endian_reader {
                 match endian {
                     ElfEndian::Big => Some(Self::from_be_bytes(slice.try_into().unwrap())),
                     ElfEndian::Little => Some(Self::from_le_bytes(slice.try_into().unwrap())),
-                    _ => None
+                    _ => None,
                 }
             }
         }
-    }
+    };
 }
 
 impl_endian_reader!(u16);

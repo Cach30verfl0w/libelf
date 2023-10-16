@@ -11,7 +11,7 @@ pub enum ElfClass {
     #[default]
     Invalid = 0,
     Class32 = 1,
-    Class64 = 2
+    Class64 = 2,
 }
 
 /// This enum represents the `ELF_DATA` field of the ident bytes in the header. This can be none if
@@ -27,7 +27,7 @@ pub enum ElfEndian {
     #[default]
     Invalid = 0,
     Little = 1,
-    Big = 2
+    Big = 2,
 }
 
 /// This enum represents the version of the ELF file. This can currently be the current version (1)
@@ -40,7 +40,7 @@ pub enum ElfEndian {
 pub enum ElfVersion {
     Invalid = 0,
     #[default]
-    Current = 1
+    Current = 1,
 }
 
 #[repr(u8)]
@@ -97,7 +97,7 @@ pub enum ElfOsABI {
     CloudABI = 0x11,
 
     /// Stratus Technologies OpenVOS
-    OpenVOX = 0x12
+    OpenVOX = 0x12,
 }
 
 /// This structure represents the 9 bytes of the ident bytes, which can be found in the
@@ -123,5 +123,5 @@ pub struct ElfIdent {
     pub abi: ElfOsABI,
 
     /// This byte indicates the ABI extensions version of the ELF file.
-    pub abi_version: u8
+    pub abi_version: u8,
 }

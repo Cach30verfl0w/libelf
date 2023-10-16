@@ -1,6 +1,20 @@
-use crate::Elf;
-use crate::header::{FileType, SectionFlags, SectionType, SegmentFlags, SegmentType, TargetMachine};
-use crate::header::ident::{ElfClass, ElfEndian, ElfOsABI, ElfVersion};
+use crate::{
+    header::{
+        ident::{
+            ElfClass,
+            ElfEndian,
+            ElfOsABI,
+            ElfVersion,
+        },
+        FileType,
+        SectionFlags,
+        SectionType,
+        SegmentFlags,
+        SegmentType,
+        TargetMachine,
+    },
+    Elf,
+};
 
 #[test]
 fn test_file_header() {
@@ -139,7 +153,10 @@ fn test_program_headers() {
     assert_eq!(program_header.physical_address, 0x6000);
     assert_eq!(program_header.file_size, 0x42231);
     assert_eq!(program_header.memory_size, 0x42231);
-    assert_eq!(program_header.flags, SegmentFlags::READABLE | SegmentFlags::EXECUTABLE);
+    assert_eq!(
+        program_header.flags,
+        SegmentFlags::READABLE | SegmentFlags::EXECUTABLE
+    );
     assert_eq!(program_header.alignment, 0x1000);
 
     // Check fiftieth program header
@@ -161,7 +178,10 @@ fn test_program_headers() {
     assert_eq!(program_header.physical_address, 0x5A0D8);
     assert_eq!(program_header.file_size, 0x2F58);
     assert_eq!(program_header.memory_size, 0x3068);
-    assert_eq!(program_header.flags, SegmentFlags::READABLE | SegmentFlags::WRITABLE);
+    assert_eq!(
+        program_header.flags,
+        SegmentFlags::READABLE | SegmentFlags::WRITABLE
+    );
     assert_eq!(program_header.alignment, 0x1000);
 
     // Check seventh program header
@@ -172,7 +192,10 @@ fn test_program_headers() {
     assert_eq!(program_header.physical_address, 0x5C6C8);
     assert_eq!(program_header.file_size, 0x210);
     assert_eq!(program_header.memory_size, 0x210);
-    assert_eq!(program_header.flags, SegmentFlags::READABLE | SegmentFlags::WRITABLE);
+    assert_eq!(
+        program_header.flags,
+        SegmentFlags::READABLE | SegmentFlags::WRITABLE
+    );
     assert_eq!(program_header.alignment, 0x8);
 
     // Check eighth program header
@@ -238,7 +261,10 @@ fn test_program_headers() {
     assert_eq!(program_header.physical_address, 0x0);
     assert_eq!(program_header.file_size, 0x0);
     assert_eq!(program_header.memory_size, 0x0);
-    assert_eq!(program_header.flags, SegmentFlags::READABLE | SegmentFlags::WRITABLE);
+    assert_eq!(
+        program_header.flags,
+        SegmentFlags::READABLE | SegmentFlags::WRITABLE
+    );
     assert_eq!(program_header.alignment, 0x10);
 
     // Check fourteenth program header
